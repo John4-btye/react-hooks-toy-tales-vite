@@ -1,44 +1,137 @@
-# Practice Challenge: Toy Tales
+# Toy Tales: Full CRUD Implementation
 
-You've got a friend in need! Again!
+This project now supports full CRUD-style data interaction for toys using:
 
-Andy has misplaced of his toys (again) and need your help to organize them.
+- `GET` on app load
+- `POST` on form submit
+- `DELETE` on donate
+- `PATCH` on like
+
+The implementation follows the required workflow pattern:
+
+- `When X event occurs` -> `Make Y fetch request` -> `Update Z state`
 
 ## Setup
 
-All the information about Andy's toys can be found in the `db.json` file. We'll
-be using `json-server` to create a RESTful API for our database.
+1. Install dependencies:
 
-Run `npm install` to install our dependencies.
+```bash
+npm install
+```
 
-Then, run `npm run server` to start up `json-server` on `http://localhost:3001`.
+2. Start the API server (`json-server`) at `http://localhost:3001`:
 
-In another tab, run `npm run dev` to start up our React app at `http://localhost:3000`.
+```bash
+npm run server
+```
 
-In another tab, run `npm run test` to run the test suite.
+3. In another terminal, start the Vite app:
 
-Before you start building out the application, the first step that you should
-take is to examint the current code and component hierarchy. This will tell you 
-how components can pass data to each other as well as where that information should 
-be stored.
+```bash
+npm run dev
+```
 
-## Deliverables
+4. Run tests:
 
-- _When our application loads_, make a GET request to `/toys` to fetch the toy
-  array. Given your component tree, think about which component should be
-  responsible for the array. After you have put the data in the proper
-  component, your next job is to render the `ToyCard` components on the page.
+```bash
+npm test -- --run
+```
 
-- _When the `ToyForm` is submitted_, make a POST request to `/toys` to save a
-  new toy to the server. Using the ideas of controlled form and inverse data
-  flow, think about how to render a new `ToyCard` for the toy that you created.
+## What Changed
 
-- _When the `Donate to Goodwill` button is clicked_, make a DELETE request to
-  `/toys/:id` with the ID of the toy that was clicked to delete the toy from the
-  server. The `ToyCard` that you clicked on should also be removed from the DOM.
+### 1. Display All Toys (`GET /toys`)
 
-- _When the like button is clicked_, make a PATCH request to `/toys/:id` with
-  the id of the toy that was clicked, along with the new number of likes (this
-  should be sent in the body of the PATCH request, as a object:
-  `{ likes: 10 }`), to update the toy on the server. Clicking on the button
-  should also increase the number of likes on the DOM.
+Event:
+- App loads.
+
+Request:
+- `App` makes `fetch("http://localhost:3001/toys")` inside `useEffect`.
+
+State update:
+- Response data is stored in `toys` state in `App`.
+
+UI update:
+- `App` passes `toys` into `ToyContainer`.
+- `ToyContainer` maps over toys and renders one `ToyCard` per item.
+- `ToyCard` now displays real toy details (`name`, `image`, `likes`) instead of placeholders.
+
+### 2. Add a Toy (`POST /toys`)
+
+Event:
+- User submits the `ToyForm`.
+
+Request:
+- `App.handleAddToy` sends a `POST` request with:
+  - `name`
+  - `image`
+  - `likes: 0` (always initialized to zero)
+
+State update:
+- The created toy from the server response is appended to `toys` state.
+
+UI update:
+- New toy appears immediately on the page without reload.
+
+### 3. Donate a Toy (`DELETE /toys/:id`)
+
+Event:
+- User clicks `Donate to GoodWill` on a card.
+
+Request:
+- `App.handleDonateToy` sends `DELETE` to `/toys/:id`.
+
+State update:
+- The deleted toy is removed from `toys` with `filter`.
+
+UI update:
+- Card is removed from the list after successful delete.
+
+### 4. Like a Toy (`PATCH /toys/:id`)
+
+Event:
+- User clicks `Like <3`.
+
+Request:
+- `App.handleLikeToy` sends `PATCH` to `/toys/:id` with `{ likes: currentLikes + 1 }`.
+
+State update:
+- The returned toy is merged with `map`, replacing only the matching toy by `id`.
+
+UI update:
+- Likes increment immediately.
+- Toy order is preserved because `map` replaces in place rather than re-sorting or re-appending.
+
+## Component Responsibilities
+
+- `App.jsx`
+  - Owns app-level state (`toys`, `showForm`)
+  - Handles all fetch requests (`GET`, `POST`, `DELETE`, `PATCH`)
+  - Passes data and callbacks to child components
+
+- `ToyForm.jsx`
+  - Uses controlled inputs (`name`, `image`)
+  - Sends form data up to `App` on submit
+  - Clears inputs after submit
+
+- `ToyContainer.jsx`
+  - Renders the toy list
+  - Passes each toy and handlers down to `ToyCard`
+
+- `ToyCard.jsx`
+  - Displays toy details
+  - Triggers like and donate callbacks
+
+## Code Commenting Notes
+
+Comments were intentionally added only where logic was multi-step or easy to misread (for example, preserving list order during like updates). Basic self-explanatory lines were left uncommented to keep the code clean.
+
+## Validation
+
+Test results after implementation:
+
+- `AllToys.test.jsx` passed
+- `ToyForm.test.jsx` passed
+- `Donate.test.jsx` passed
+- `Like.test.jsx` passed
+
+Total: `4` test files, `5` tests passed.

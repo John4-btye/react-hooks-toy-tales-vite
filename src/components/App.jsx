@@ -41,6 +41,25 @@ function App() {
     });
   }
 
+  function handleLikeToy(toyToUpdate) {
+    const updatedLikes = toyToUpdate.likes + 1;
+
+    fetch(`http://localhost:3001/toys/${toyToUpdate.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // Replace only the matching toy so list order stays unchanged.
+      body: JSON.stringify({ likes: updatedLikes }),
+    })
+      .then((response) => response.json())
+      .then((updatedToy) => {
+        setToys((currentToys) =>
+          currentToys.map((toy) => (toy.id === updatedToy.id ? updatedToy : toy))
+        );
+      });
+  }
+
   return (
     <>
       <Header />
@@ -48,7 +67,11 @@ function App() {
       <div className="buttonContainer">
         <button onClick={handleClick}>Add a Toy</button>
       </div>
-      <ToyContainer toys={toys} onDonateToy={handleDonateToy} />
+      <ToyContainer
+        toys={toys}
+        onDonateToy={handleDonateToy}
+        onLikeToy={handleLikeToy}
+      />
     </>
   );
 }
