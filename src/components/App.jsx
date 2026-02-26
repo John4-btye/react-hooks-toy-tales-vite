@@ -33,6 +33,14 @@ function App() {
       .then((newToy) => setToys((currentToys) => [...currentToys, newToy]));
   }
 
+  function handleDonateToy(toyId) {
+    fetch(`http://localhost:3001/toys/${toyId}`, {
+      method: "DELETE",
+    }).then(() => {
+      setToys((currentToys) => currentToys.filter((toy) => toy.id !== toyId));
+    });
+  }
+
   return (
     <>
       <Header />
@@ -40,7 +48,7 @@ function App() {
       <div className="buttonContainer">
         <button onClick={handleClick}>Add a Toy</button>
       </div>
-      <ToyContainer toys={toys} />
+      <ToyContainer toys={toys} onDonateToy={handleDonateToy} />
     </>
   );
 }
